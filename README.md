@@ -1,9 +1,6 @@
 # dotfiles
 
-Personal `~/.config` for an Arch + Hyprland setup. The repo lives directly in
-`~/.config`; a deny-all `.gitignore` whitelists only the configs below, so app
-caches, browser profiles, and credentials are never tracked.
-
+Personal `~/.config` for an Arch + Hyprland setup.
 ## What's here
 
 | Dir | What |
