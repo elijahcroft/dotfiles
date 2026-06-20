@@ -1,0 +1,286 @@
+/* ============================================================
+   Waybar — minimal monochrome
+   soft whites · smooth glass · subtle glow
+   ============================================================ */
+
+/* --- Global Styles --- */
+* {
+  font-family: 'SF Pro Text', 'Inter', 'Segoe UI', 'NotoSans Nerd Font', sans-serif;
+  font-size: 13px;
+  min-height: 0;
+  padding-right: 0px;
+  padding-left: 0px;
+  padding-bottom: 0px;
+}
+
+/* --- Waybar Container --- */
+#waybar {
+  background: transparent;
+  color: #ededed;
+  margin: 0px;
+  font-weight: 500;
+}
+
+/* Shared module look: frosted dark glass + hairline white edge */
+#workspaces,
+#custom-uptime,
+#custom-sysmon,
+#custom-music,
+#custom-binds,
+#custom-claude-usage,
+#clock,
+#custom-pomodoro,
+#bluetooth,
+#pulseaudio,
+#backlight,
+#network,
+#custom-lock,
+#battery {
+  background: linear-gradient(160deg, rgba(28, 28, 30, 0.92), rgba(18, 18, 20, 0.92));
+  color: #cfcfcf;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* --- Left + standalone Modules (rounded blocks with spacing) --- */
+#workspaces,
+#custom-uptime,
+#custom-sysmon,
+#custom-music,
+#custom-binds,
+#custom-claude-usage,
+#clock,
+#custom-pomodoro {
+  padding: 0.3rem 0.85rem;
+  margin: 5px 0px;
+  border-radius: 10px;
+  min-width: 0;
+}
+
+#workspaces {
+  padding: 2px 4px;
+  margin-left: 7px;
+  margin-right: 5px;
+}
+
+#custom-uptime,
+#custom-binds,
+#custom-claude-usage,
+#custom-sysmon {
+  margin-right: 5px;
+}
+
+/* --- System monitor (CPU + RAM) --- */
+#custom-sysmon {
+  font-size: 15px;
+}
+#custom-sysmon.high {
+  border-color: rgba(255, 95, 86, 0.35);
+  box-shadow:
+    0 0 16px rgba(255, 95, 86, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* --- Claude Code usage --- */
+#custom-claude-usage {
+  color: #bdbdbd;
+  font-weight: 600;
+}
+#custom-claude-usage.idle {
+  color: #6e6e73;
+}
+#custom-claude-usage.high {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+#custom-binds {
+  color: #bdbdbd;
+  font-size: 15px;
+}
+
+#custom-music {
+  margin-right: 5px;
+  color: #bdbdbd;
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* Smooth white hover glow — same treatment everywhere */
+#custom-uptime:hover,
+#custom-binds:hover,
+#custom-claude-usage:hover,
+#custom-sysmon:hover,
+#custom-music:hover,
+#clock:hover,
+#custom-pomodoro:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 0 16px rgba(255, 255, 255, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* --- Workspaces buttons --- */
+#workspaces button {
+  color: #6e6e73;
+  border-radius: 8px;
+  padding: 0.3rem 0.65rem;
+  margin: 0 1px;
+  background: transparent;
+  border: none;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+#workspaces button:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+#workspaces button.active {
+  color: #111111;
+  background: linear-gradient(160deg, #ffffff, #d6d6d6);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+}
+
+/* --- Center: Clock --- */
+#clock {
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 0 18px rgba(255, 255, 255, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* --- Pomodoro --- */
+#custom-pomodoro {
+  margin-left: 5px;
+  margin-right: 5px;
+  color: #bdbdbd;
+  font-weight: 600;
+}
+#custom-pomodoro.work,
+#custom-pomodoro.break {
+  color: #111111;
+  background: linear-gradient(160deg, #ffffff, #d6d6d6);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+}
+
+/* --- Right Modules (seamless bar) --- */
+#bluetooth,
+#pulseaudio,
+#backlight,
+#network,
+#custom-lock,
+#battery {
+  padding: 0.3rem 0.8rem;
+  margin: 5px 0px;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+#bluetooth {
+  margin-left: 0px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  color: #6e6e73;
+  font-size: 16px;
+}
+#bluetooth.on,
+#bluetooth.connected {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+#network {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+#network.disconnected {
+  color: #8a8a8e;
+}
+
+#battery {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  margin-right: 7px;
+}
+#battery.charging {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+#battery.warning:not(.charging),
+#battery.critical:not(.charging) {
+  color: #8a8a8e;
+}
+
+#custom-lock {
+  color: #6e6e73;
+}
+
+/* Smooth frosted hover for the right bar */
+#bluetooth:hover,
+#network:hover,
+#pulseaudio:hover,
+#backlight:hover,
+#battery:hover,
+#custom-lock:hover {
+  color: #ffffff;
+  background: linear-gradient(160deg, rgba(42, 42, 45, 0.95), rgba(26, 26, 28, 0.95));
+  box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.06);
+}
+
+/* --- System tray — glass pill --- */
+#tray {
+  background: linear-gradient(160deg, rgba(28, 28, 30, 0.92), rgba(18, 18, 20, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.6rem;
+  margin: 5px 7px 5px 5px;
+  border-radius: 10px;
+}
+#tray menu {
+  background: rgba(20, 20, 22, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* --- Tooltip Styles --- */
+tooltip {
+  background: linear-gradient(160deg, rgba(28, 28, 30, 0.97), rgba(18, 18, 20, 0.97));
+  color: #ededed;
+  padding: 6px 12px;
+  margin: 5px 0px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+}
+
+/* --- Claude mascot button (image via CSS since this waybar build lacks the image module) --- */
+#custom-claude {
+  background-image: url("/home/ej/.config/waybar/asset/claude-mascot.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 18px 18px;
+  min-width: 18px;
+  margin-left: 5px;
+  margin-right: 2px;
+}

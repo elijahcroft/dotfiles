@@ -1,0 +1,6 @@
+# runtime jam state + browser profile (not config)
+jam-state.json
+jam-state.json.tmp
+funnel-url.txt
+funnel.log
+.profile/

@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#070605">
+<title>VIDEO WALL · JAM</title>
+<style>
+  :root{
+    --bg:#050403;
+    --bg2:#0b0908;
+    --panel:#0d0b09;
+    --panel2:#080706;
+    --line:#27231f;
+    --line2:#3a332d;
+    --ink:#ece5d7;
+    --dim:#8a8174;
+    --faint:#453f37;
+    --accent:#e6b450;
+    --accent2:#b78b35;
+    --glow:rgba(230,180,80,.18);
+    --good:#78d39f;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ min-height:100%; }
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(230,180,80,.10), transparent 42%),
+      radial-gradient(800px 500px at 10% 0%, rgba(255,255,255,.04), transparent 40%),
+      linear-gradient(180deg, #050403 0%, #080605 55%, #040302 100%);
+    color:var(--ink);
+    font-family:var(--mono);
+    -webkit-font-smoothing:antialiased;
+    padding:
+      max(16px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right))
+      calc(24px + env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
+  }
+  .shell{
+    width:min(1040px, 100%);
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:2px 2px 0;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    letter-spacing:.26em;
+    font-size:12px;
+    font-weight:600;
+  }
+  .brand .mark{
+    width:10px;
+    height:10px;
+    background:var(--accent);
+    box-shadow:0 0 12px var(--glow);
+  }
+  .status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--dim);
+    font-size:10px;
+    letter-spacing:.22em;
+  }
+  .status .live{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:var(--accent);
+  }
+  .status .dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--accent);
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(230,180,80,.22); }
+    50%{ opacity:.45; box-shadow:0 0 0 5px transparent; }
+  }
+
+  .hero{
+    display:grid;
+    grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);
+    gap:14px;
+  }
+  .card{
+    background:linear-gradient(180deg, rgba(13,11,9,.97), rgba(7,6,5,.98));
+    border:1px solid var(--line);
+    box-shadow:0 26px 70px rgba(0,0,0,.36);
+  }
+  .hero-copy{
+    padding:18px;
+    border-left:2px solid var(--accent);
+  }
+  .eyebrow{
+    color:var(--accent);
+    font-size:10px;
+    letter-spacing:.32em;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(22px, 4vw, 42px);
+    line-height:1.04;
+    letter-spacing:-.03em;
+    max-width:13ch;
+    text-wrap:balance;
+  }
+  .hero-copy p{
+    margin-top:14px;
+    max-width:58ch;
+    color:var(--dim);
+    font-size:13px;
+    line-height:1.7;
+  }
+  .meta-row{
+    margin-top:18px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 10px;
+    border:1px solid var(--line2);
+    color:var(--ink);
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    background:rgba(255,255,255,.02);
+  }
+  .pill .k{
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+  }
+  .namebox{
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    gap:14px;
+  }
+  .label{
+    display:block;
+    color:var(--dim);
+    font-size:10px;
+    letter-spacing:.26em;
+    margin-bottom:8px;
+  }
+  input, textarea, button{
+    font:inherit;
+  }
+  input#name, input#search, textarea#urls{
+    width:100%;
+    background:#000;
+    color:var(--ink);
+    border:1px solid var(--line);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input#name:focus, input#search:focus, textarea#urls:focus{
+    border-color:var(--accent2);
+    box-shadow:inset 0 0 0 1px var(--accent2);
+  }
+  input#name, input#search{
+    height:46px;
+    padding:0 12px;
+    font-size:14px;
+  }
+  textarea#urls{
+    min-height:114px;
+    resize:vertical;
+    padding:11px 12px;
+    font-size:13px;
+    line-height:1.6;
+  }
+  .subtle{
+    color:var(--faint);
+    font-size:10px;
+    line-height:1.6;
+    letter-spacing:.12em;
+  }
+
+  .browser{
+    padding:16px;
+  }
+  .browser-top{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .browser-top .searchwrap{
+    flex:1 1 320px;
+    position:relative;
+  }
+  .browser-top input#search{
+    padding-right:108px;
+  }
+  .search-actions{
+    position:absolute;
+    top:7px;
+    right:7px;
+    display:flex;
+    gap:6px;
+  }
+  .mini{
+    border:1px solid var(--line2);
+    background:#0b0908;
+    color:var(--ink);
+    padding:7px 10px;
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .14s ease, border-color .14s ease, background .14s ease;
+  }
+  .mini:hover{
+    border-color:var(--accent2);
+    background:#12100e;
+  }
+  .mini:active{
+    transform:translateY(1px);
+  }
+  .mini:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+  }
+  .browser-top .pill{
+    white-space:nowrap;
+  }
+
+  .browser-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1.05fr) minmax(330px,.95fr);
+    gap:14px;
+  }
+  .preview-shell{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .window{
+    border:1px solid var(--line);
+    background:#000;
+    overflow:hidden;
+  }
+  .chrome{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, #13100e, #090806);
+    color:var(--dim);
+    font-size:10px;
+    letter-spacing:.14em;
+  }
+  .lights{
+    display:flex;
+    gap:6px;
+  }
+  .lights span{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#382f27;
+  }
+  .address{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--accent);
+  }
+  .player{
+    position:relative;
+    aspect-ratio:16/9;
+    background:
+      radial-gradient(120% 100% at 50% 20%, rgba(230,180,80,.14), transparent 40%),
+      #020202;
+  }
+  .player iframe{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    border:0;
+    display:block;
+    background:#000;
+  }
+  .preview-info{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .preview-title{
+    font-size:15px;
+    line-height:1.4;
+    letter-spacing:-.01em;
+  }
+  .preview-channel{
+    color:var(--dim);
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+  .preview-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    color:var(--faint);
+    font-size:10px;
+    letter-spacing:.12em;
+  }
+  .preview-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:2px;
+  }
+  .primary{
+    background:var(--accent);
+    color:#1a1408;
+    border:1px solid var(--accent);
+  }
+  .primary:hover{
+    background:#f0c35c;
+    border-color:#f0c35c;
+  }
+  .ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line2);
+  }
+  .ghost:hover{
+    border-color:var(--dim);
+  }
+
+  .results-shell{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .results-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .results-head b{
+    font-size:11px;
+    letter-spacing:.24em;
+    color:var(--ink);
+  }
+  .results-head span{
+    font-size:10px;
+    color:var(--dim);
+    letter-spacing:.14em;
+  }
+  .results{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:0;
+  }
+  .result{
+    display:grid;
+    grid-template-columns:92px minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+    background:#070605;
+    border:1px solid var(--line);
+    padding:8px;
+    cursor:pointer;
+    transition:border-color .14s ease, transform .14s ease, background .14s ease;
+  }
+  .result:hover{
+    border-color:var(--line2);
+    background:#0b0908;
+  }
+  .result.selected{
+    border-color:var(--accent2);
+    box-shadow:inset 0 0 0 1px rgba(183,139,53,.24);
+  }
+  .thumb{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:#000;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .thumb img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .result-main{
+    min-width:0;
+  }
+  .result-title{
+    font-size:12px;
+    line-height:1.45;
+    color:var(--ink);
+    overflow:hidden;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  .result-sub{
+    margin-top:5px;
+    color:var(--dim);
+    font-size:10px;
+    line-height:1.55;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .result-meta{
+    margin-top:6px;
+    color:var(--faint);
+    font-size:9px;
+    letter-spacing:.12em;
+  }
+  .result button{
+    white-space:nowrap;
+  }
+  .empty-state, .loading-state{
+    padding:18px 6px;
+    color:var(--faint);
+    font-size:11px;
+    letter-spacing:.18em;
+    text-align:center;
+    border:1px dashed var(--line);
+    background:rgba(255,255,255,.015);
+  }
+
+  .manual{
+    display:grid;
+    grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);
+    gap:14px;
+  }
+  .panel{
+    padding:16px;
+  }
+  .panel-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .panel-head b{
+    font-size:11px;
+    letter-spacing:.24em;
+    color:var(--ink);
+  }
+  .panel-head span{
+    font-size:10px;
+    letter-spacing:.14em;
+    color:var(--dim);
+  }
+  .actions{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .list-h{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .list-h span{
+    color:var(--dim);
+    font-size:10px;
+    letter-spacing:.24em;
+  }
+  .list-h b{
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+  }
+  ul#list{
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  li.row{
+    display:grid;
+    grid-template-columns:26px 78px 1fr;
+    align-items:center;
+    gap:12px;
+    background:#070605;
+    border:1px solid var(--line);
+    padding:8px;
+  }
+  li.row.mine{
+    border-left:2px solid var(--accent);
+  }
+  .row .n{
+    font-size:11px;
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    text-align:center;
+  }
+  .row .thumb{
+    width:78px;
+  }
+  .row .meta{
+    min-width:0;
+  }
+  .row .meta .id{
+    font-size:12px;
+    color:var(--dim);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .row .meta .by{
+    margin-top:3px;
+    font-size:10px;
+    letter-spacing:.12em;
+    color:var(--faint);
+  }
+  .row .meta .by b{
+    color:var(--accent2);
+  }
+  .empty{
+    color:var(--faint);
+    font-size:11px;
+    letter-spacing:.18em;
+    padding:10px 2px;
+  }
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:calc(20px + env(safe-area-inset-bottom));
+    transform:translate(-50%, 18px);
+    opacity:0;
+    pointer-events:none;
+    background:var(--accent);
+    color:#1a1408;
+    padding:11px 18px;
+    border-radius:2px;
+    font-size:12px;
+    letter-spacing:.18em;
+    font-weight:600;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:90;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translate(-50%, 0);
+  }
+  .toast.err{
+    background:#c45c3f;
+    color:#fff;
+  }
+
+  @media (max-width: 920px){
+    .hero, .browser-grid, .manual{
+      grid-template-columns:1fr;
+    }
+    h1{
+      max-width:none;
+    }
+  }
+  @media (max-width: 640px){
+    .topbar{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+    .status{
+      flex-wrap:wrap;
+    }
+    .result{
+      grid-template-columns:82px minmax(0,1fr);
+    }
+    .result button{
+      grid-column:1 / -1;
+      justify-self:stretch;
+    }
+    li.row{
+      grid-template-columns:26px 64px 1fr;
+    }
+    .row .thumb{
+      width:64px;
+    }
+    .browser-top input#search{
+      padding-right:88px;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="mark"></span><span>VIDEO WALL</span></div>
+      <div class="status">
+        <span class="live"><span class="dot"></span>JAM</span>
+        <span>SEARCH. PREVIEW. DROP.</span>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy card">
+        <div class="eyebrow">YOU CAN TREAT THIS LIKE A MINI BROWSER</div>
+        <h1>Search YouTube here, preview the clip inline, then add it to the wall in one tap.</h1>
+        <p>
+          The old flow was just paste-and-pray. This version turns the phone into a focused share surface:
+          search, select, watch a small embedded player, and push the video to everyone on the wall.
+        </p>
+        <div class="meta-row">
+          <div class="pill">INLINE PLAYER <span class="k">EMBED</span></div>
+          <div class="pill">ONE-TAP ADD <span class="k">FAST</span></div>
+          <div class="pill">MANUAL PASTE <span class="k">FALLBACK</span></div>
+        </div>
+      </div>
+
+      <div class="namebox card">
+        <div>
+          <label class="label" for="name">YOUR NAME</label>
+          <input id="name" maxlength="40" placeholder="guest" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="subtle">
+          Your name is only used to label items you add. The wall lineup stays shared for everyone on the same jam.
+        </div>
+      </div>
+    </section>
+
+    <section class="browser card">
+      <div class="browser-top">
+        <div class="searchwrap">
+          <label class="label" for="search">SEARCH YOUTUBE OR PASTE A LINK</label>
+          <input id="search" autocomplete="off" autocapitalize="off" spellcheck="false"
+            placeholder="Type a title, artist, channel, or a YouTube URL">
+          <div class="search-actions">
+            <button class="mini" id="searchBtn" type="button">Search</button>
+            <button class="mini" id="pasteSearch" type="button">Paste</button>
+          </div>
+        </div>
+        <div class="pill">LIVE SESSION <span class="k" id="sessionCount">00</span></div>
+      </div>
+
+      <div class="browser-grid">
+        <div class="preview-shell">
+          <div class="window">
+            <div class="chrome">
+              <div class="lights"><span></span><span></span><span></span></div>
+              <div class="address" id="address">youtube.com/watch?v=___________</div>
+            </div>
+            <div class="player">
+              <iframe id="player" title="Selected YouTube preview"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                referrerpolicy="origin-when-cross-origin"
+                src="about:blank"></iframe>
+            </div>
+          </div>
+          <div class="preview-info">
+            <div class="preview-title" id="previewTitle">Search for a video to preview it here.</div>
+            <div class="preview-channel" id="previewChannel">No selection</div>
+            <div class="preview-meta" id="previewMeta"></div>
+            <div class="preview-actions">
+              <button class="mini primary" id="addSelected" type="button" disabled>Add selected</button>
+              <a class="mini ghost" id="openSelected" href="https://m.youtube.com" target="_blank" rel="noopener">Open on YouTube</a>
+              <button class="mini ghost" id="clearSelected" type="button">Clear selection</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-shell">
+          <div class="results-head">
+            <b>SEARCH RESULTS</b>
+            <span id="searchState">Idle</span>
+          </div>
+          <div id="results" class="results">
+            <div class="empty-state">SEARCH TO SEE YOUTUBE RESULTS</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="manual">
+      <div class="panel card">
+        <div class="panel-head">
+          <b>MANUAL ADD</b>
+          <span>Bulk paste still works when someone sends a raw link.</span>
+        </div>
+        <label class="label" for="urls">PASTE YOUTUBE LINK(S)</label>
+        <textarea id="urls" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"
+          placeholder="https://youtu.be/...&#10;https://www.youtube.com/watch?v=...&#10;one per line"></textarea>
+        <div class="actions">
+          <button class="mini primary" id="addText" type="button">Add to wall</button>
+          <button class="mini ghost" id="clearText" type="button">Clear box</button>
+        </div>
+      </div>
+
+      <div class="panel card">
+        <div class="panel-head">
+          <b>ON THE WALL</b>
+          <span>What everybody sees right now.</span>
+        </div>
+        <div class="list-h"><span>COUNT</span><b id="count">00</b></div>
+        <ul id="list"><li class="empty">- NOTHING YET -</li></ul>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const NAME_KEY = "videowall.jam.name";
+  const MINE_KEY = "videowall.jam.mine";
+  const ID_RE = /^[A-Za-z0-9_-]{11}$/;
+
+  const nameEl = document.getElementById("name");
+  const searchEl = document.getElementById("search");
+  const urlsEl = document.getElementById("urls");
+  const searchBtn = document.getElementById("searchBtn");
+  const pasteSearchBtn = document.getElementById("pasteSearch");
+  const addTextBtn = document.getElementById("addText");
+  const clearTextBtn = document.getElementById("clearText");
+  const addSelectedBtn = document.getElementById("addSelected");
+  const clearSelectedBtn = document.getElementById("clearSelected");
+  const openSelected = document.getElementById("openSelected");
+  const addressEl = document.getElementById("address");
+  const playerEl = document.getElementById("player");
+  const previewTitleEl = document.getElementById("previewTitle");
+  const previewChannelEl = document.getElementById("previewChannel");
+  const previewMetaEl = document.getElementById("previewMeta");
+  const resultsEl = document.getElementById("results");
+  const searchStateEl = document.getElementById("searchState");
+  const listEl = document.getElementById("list");
+  const countEl = document.getElementById("count");
+  const sessionCountEl = document.getElementById("sessionCount");
+  const toastEl = document.getElementById("toast");
+
+  let mine = new Set();
+  try{ mine = new Set(JSON.parse(localStorage.getItem(MINE_KEY) || "[]")); }catch(e){}
+  function rememberMine(ids){
+    ids.forEach(id => mine.add(id));
+    try{ localStorage.setItem(MINE_KEY, JSON.stringify([...mine])); }catch(e){}
+  }
+
+  try{ nameEl.value = localStorage.getItem(NAME_KEY) || ""; }catch(e){}
+  nameEl.addEventListener("input", ()=>{
+    try{ localStorage.setItem(NAME_KEY, nameEl.value.trim()); }catch(e){}
+  });
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, c => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;"
+    }[c]));
+  }
+  function textFrom(value){
+    if(typeof value === "string") return value;
+    if(Array.isArray(value)) return value.map(textFrom).filter(Boolean).join("");
+    if(value && typeof value === "object"){
+      if(typeof value.simpleText === "string") return value.simpleText;
+      if(Array.isArray(value.runs)){
+        return value.runs.map(run => run && typeof run.text === "string" ? run.text : "").join("");
+      }
+      if(typeof value.text === "string") return value.text;
+    }
+    return "";
+  }
+  function extractId(raw){
+    const s = (raw || "").trim();
+    if(!s) return null;
+    if(ID_RE.test(s)) return s;
+    try{
+      const u = new URL(s.includes("://") ? s : "https://" + s);
+      const host = u.hostname.replace(/^www\./, "");
+      if(host === "youtu.be"){
+        const id = u.pathname.slice(1, 12);
+        if(ID_RE.test(id)) return id;
+      }
+      const v = u.searchParams.get("v");
+      if(v && ID_RE.test(v)) return v;
+      const m = u.pathname.match(/\/(?:embed|shorts|live|v)\/([A-Za-z0-9_-]{11})/);
+      if(m) return m[1];
+    }catch(e){}
+    const m = s.match(/([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+  function parseIds(text){
+    const out = [];
+    const seen = new Set();
+    String(text || "").split(/[\s,]+/).forEach(tok => {
+      const id = extractId(tok);
+      if(id && !seen.has(id)){
+        seen.add(id);
+        out.push(id);
+      }
+    });
+    return out;
+  }
+  function joinMeta(item){
+    return [item.duration, item.views, item.published].filter(Boolean).join(" \u00b7 ");
+  }
+  function thumbFor(item){
+    return item.thumb || ("https://i.ytimg.com/vi/" + item.id + "/mqdefault.jpg");
+  }
+
+  let toastTimer;
+  function toast(msg, isErr){
+    toastEl.textContent = msg;
+    toastEl.classList.toggle("err", !!isErr);
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 1900);
+  }
+
+  function setSearchState(text){
+    searchStateEl.textContent = text;
+  }
+
+  let selected = null;
+  let currentResults = [];
+  function renderPreview(item){
+    selected = item || null;
+    if(!item){
+      addressEl.textContent = "youtube.com/watch?v=___________";
+      previewTitleEl.textContent = "Search for a video to preview it here.";
+      previewChannelEl.textContent = "No selection";
+      previewMetaEl.innerHTML = "";
+      playerEl.src = "about:blank";
+      openSelected.href = "https://m.youtube.com";
+      addSelectedBtn.disabled = true;
+      renderResults(currentResults);
+      return;
+    }
+    addressEl.textContent = "youtube.com/watch?v=" + item.id;
+    previewTitleEl.textContent = item.title || item.id;
+    previewChannelEl.textContent = item.channel || "YouTube";
+    previewMetaEl.innerHTML = "";
+    const meta = joinMeta(item);
+    if(meta){
+      const span = document.createElement("span");
+      span.textContent = meta;
+      previewMetaEl.appendChild(span);
+    }
+    const url = "https://www.youtube-nocookie.com/embed/" + item.id + "?rel=0&modestbranding=1&playsinline=1";
+    playerEl.src = url;
+    openSelected.href = "https://www.youtube.com/watch?v=" + item.id;
+    addSelectedBtn.disabled = false;
+    renderResults(currentResults);
+  }
+
+  function renderResults(items){
+    currentResults = Array.isArray(items) ? items : [];
+    resultsEl.innerHTML = "";
+    if(!currentResults.length){
+      resultsEl.innerHTML = '<div class="empty-state">NO RESULTS YET. TRY A DIFFERENT SEARCH.</div>';
+      return;
+    }
+    currentResults.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "result" + (selected && selected.id === item.id ? " selected" : "");
+      card.innerHTML =
+        '<div class="thumb"><img loading="lazy" src="' + esc(thumbFor(item)) + '" alt=""></div>' +
+        '<div class="result-main">' +
+          '<div class="result-title">' + esc(item.title || item.id) + '</div>' +
+          '<div class="result-sub">' + esc(item.channel || "YouTube") + '</div>' +
+          '<div class="result-meta">' + esc(joinMeta(item) || item.id) + '</div>' +
+        '</div>' +
+        '<button class="mini primary" type="button">Add</button>';
+      card.addEventListener("click", ()=>renderPreview(item));
+      card.querySelector("button").addEventListener("click", (ev)=>{
+        ev.stopPropagation();
+        renderPreview(item);
+        addIds([item.id], "");
+      });
+      resultsEl.appendChild(card);
+    });
+  }
+
+  function setBusy(isBusy){
+    searchBtn.disabled = isBusy;
+    pasteSearchBtn.disabled = isBusy;
+  }
+
+  async function searchYouTube(query, opts){
+    const q = String(query || "").trim();
+    if(!q){
+      setSearchState("Idle");
+      renderResults([]);
+      renderPreview(null);
+      return;
+    }
+    const direct = extractId(q);
+    if(direct && (/youtu|youtube|shorts|watch|embed|live|m\.youtube/i.test(q) || ID_RE.test(q))){
+      setSearchState("Direct link");
+      renderResults([]);
+      renderPreview({
+        id: direct,
+        title: "Pasted YouTube link",
+        channel: "Direct link",
+        duration: "",
+        views: "",
+        published: "",
+        thumb: ""
+      });
+      return;
+    }
+    const seq = ++searchSeq;
+    setBusy(true);
+    setSearchState("Searching...");
+    try{
+      const r = await fetch("/api/yt-search?q=" + encodeURIComponent(q), { cache: "no-store" });
+      const data = await r.json();
+      if(seq !== searchSeq) return;
+      const items = data.items || [];
+      setSearchState(items.length ? (items.length + " results") : "No results");
+      renderResults(items);
+      if(items.length){
+        renderPreview(items[0]);
+      }else{
+        renderPreview(null);
+      }
+    }catch(e){
+      if(seq !== searchSeq) return;
+      setSearchState("Search offline");
+      renderResults([]);
+      renderPreview(null);
+      toast("SEARCH FAILED", true);
+    }finally{
+      if(seq === searchSeq) setBusy(false);
+    }
+  }
+
+  let searchSeq = 0;
+  let searchTimer;
+  function scheduleSearch(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(()=>searchYouTube(searchEl.value), 260);
+  }
+  searchEl.addEventListener("input", scheduleSearch);
+  searchEl.addEventListener("keydown", e => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      clearTimeout(searchTimer);
+      searchYouTube(searchEl.value);
+    }
+  });
+  searchBtn.addEventListener("click", ()=>searchYouTube(searchEl.value));
+
+  async function pasteIntoSearch(){
+    let text = "";
+    try{
+      if(navigator.clipboard && navigator.clipboard.readText){
+        text = (await navigator.clipboard.readText()) || "";
+      }
+    }catch(e){
+      text = "";
+    }
+    if(!text){
+      searchEl.focus();
+      toast("LONG-PRESS TO PASTE", true);
+      return;
+    }
+    searchEl.value = text.trim();
+    searchEl.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  pasteSearchBtn.addEventListener("click", pasteIntoSearch);
+
+  function updateDetect(){
+    const n = parseIds(urlsEl.value).length;
+    addTextBtn.disabled = n === 0;
+  }
+  urlsEl.addEventListener("input", updateDetect);
+  clearTextBtn.addEventListener("click", ()=>{
+    urlsEl.value = "";
+    updateDetect();
+    urlsEl.focus();
+  });
+  updateDetect();
+
+  async function addIds(ids, by){
+    const unique = parseIds(ids.join(" "));
+    if(!unique.length){
+      toast("NO VALID LINK", true);
+      return;
+    }
+    addTextBtn.disabled = true;
+    addSelectedBtn.disabled = true;
+    try{
+      const r = await fetch("/api/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          urls: unique.map(id => "https://youtu.be/" + id),
+          by: (nameEl.value || "").trim() || by || ""
+        })
+      });
+      const s = await r.json();
+      rememberMine(unique);
+      const added = s.added || 0;
+      toast(added ? ("ADDED " + added + " \u2713") : "ALREADY ON WALL");
+      urlsEl.value = "";
+      updateDetect();
+      paintState(s);
+    }catch(e){
+      toast("WALL OFFLINE", true);
+    }finally{
+      updateDetect();
+      if(selected) addSelectedBtn.disabled = false;
+    }
+  }
+
+  async function addManual(){
+    const ids = parseIds(urlsEl.value);
+    await addIds(ids, "");
+  }
+  addTextBtn.addEventListener("click", addManual);
+
+  addSelectedBtn.addEventListener("click", ()=>{
+    if(selected) addIds([selected.id], "");
+  });
+  clearSelectedBtn.addEventListener("click", ()=>renderPreview(null));
+
+  let lastRev = -1;
+  function paintState(s){
+    if(!s || s.rev === lastRev) return;
+    lastRev = s.rev;
+    const items = s.items || [];
+    countEl.textContent = String(items.length).padStart(2, "0");
+    sessionCountEl.textContent = String(items.length).padStart(2, "0");
+    if(!items.length){
+      listEl.innerHTML = '<li class="empty">- NOTHING YET -</li>';
+      return;
+    }
+    listEl.innerHTML = "";
+    items.forEach((it, i) => {
+      const li = document.createElement("li");
+      li.className = "row" + (mine.has(it.id) ? " mine" : "");
+      const by = it.by ? ('<div class="by">BY <b>' + esc(it.by) + '</b></div>') : (mine.has(it.id) ? '<div class="by">BY <b>YOU</b></div>' : '');
+      li.innerHTML =
+        '<div class="n">' + String(i + 1).padStart(2, "0") + '</div>' +
+        '<div class="thumb"><img loading="lazy" src="https://i.ytimg.com/vi/' + esc(it.id) + '/mqdefault.jpg" alt=""></div>' +
+        '<div class="meta"><div class="id">' + esc(it.id) + '</div>' + by + '</div>';
+      listEl.appendChild(li);
+    });
+  }
+
+  async function refresh(){
+    try{
+      const r = await fetch("/api/state", { cache: "no-store" });
+      paintState(await r.json());
+    }catch(e){}
+  }
+
+  refresh();
+  setInterval(()=>{ if(!document.hidden) refresh(); }, 3000);
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) refresh(); });
+
+  // Start focused on search so the phone feels like a lightweight browser.
+  setTimeout(()=>searchEl.focus(), 250);
+})();
+</script>
+</body>
+</html>

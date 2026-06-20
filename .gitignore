@@ -1,0 +1,28 @@
+# Dotfiles: deny everything at the repo root, then whitelist the configs we track.
+# `/*` matches only top-level entries, so files INSIDE whitelisted dirs stay tracked.
+/*
+
+# whitelist
+!/.gitignore
+!/README.md
+!/hypr
+!/waybar
+!/ghostty
+!/kitty
+!/dunst
+!/wofi
+!/wlogout
+!/fastfetch
+!/mpv
+!/btop
+!/eww
+!/git
+
+# runtime junk / tool state inside tracked dirs
+**/.claude/
+hypr/videowall/.profile/
+hypr/videowall/__pycache__/
+hypr/videowall/jam-state.json
+hypr/videowall/funnel.log
+hypr/videowall/funnel-url.txt
+*.bak

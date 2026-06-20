@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIDEO WALL</title>
+<style>
+  :root{
+    --bg:#000;
+    --panel:#0a0908;
+    --panel-2:#070605;
+    --seam:#1a1917;
+    --line:#262421;
+    --ink:#e9e5db;
+    --dim:#7c776e;
+    --faint:#3a3631;
+    --accent:#e6b450;          /* tungsten amber */
+    --accent-deep:#8a6a26;
+    --accent-glow:rgba(230,180,80,.18);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+    --hud-h:30px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--mono);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    user-select:none;
+    cursor:default;
+  }
+  body.idle{ cursor:none; }
+
+  /* ---------- VIDEO GRID ---------- */
+  .wall{
+    position:fixed; inset:0;
+    display:grid;
+    grid-template-columns:repeat(var(--cols,1),1fr);
+    grid-template-rows:repeat(var(--rows,1),1fr);
+    gap:1px;
+    background:var(--seam);
+    z-index:1;
+  }
+  .tile{
+    position:relative;
+    background:#000;
+    overflow:hidden;
+    container-type:size;
+    animation:tileIn .28s ease both;
+  }
+  @keyframes tileIn{ from{ opacity:0; transform:scale(.985); } to{ opacity:1; transform:none; } }
+  /* FILL (default): the video covers the whole tile, overflow cropped -> no
+     black bars. On a 1/4/9-up grid the tiles are already 16:9 so nothing is
+     cropped; it only trims the edges in unfillable cases like a 2-up. */
+  .tile iframe{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:max(100cqw, calc(100cqh * 16 / 9));
+    height:max(100cqh, calc(100cqw * 9 / 16));
+    border:0; display:block;
+  }
+  /* FIT (press C): whole frame visible, may letterbox. */
+  body.fit .tile iframe{
+    top:0; left:0; transform:none;
+    width:100%; height:100%;
+  }
+
+  .tile-ch{
+    position:absolute; top:8px; left:8px; z-index:3;
+    display:flex; align-items:center; gap:7px;
+    font-size:10px; letter-spacing:.18em; line-height:1;
+    color:var(--ink);
+    background:rgba(0,0,0,.6);
+    border-left:2px solid var(--faint);
+    padding:5px 8px 5px 7px;
+    cursor:pointer; pointer-events:auto; user-select:none;
+    transition:opacity .25s ease, border-color .2s ease;
+    font-variant-numeric:tabular-nums;
+    backdrop-filter:blur(2px);
+  }
+  .tile-ch:hover{ border-left-color:var(--accent); }
+  .ch-aud{ display:none; position:relative; padding-left:12px; color:var(--accent); letter-spacing:.2em; }
+  .ch-aud::before{
+    content:""; position:absolute; left:0; top:50%; transform:translateY(-50%);
+    width:6px; height:6px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 8px var(--accent-glow); animation:pulse 2s ease-in-out infinite;
+  }
+  .tile.audio .tile-ch{ border-left-color:var(--accent); }
+  .tile.audio .ch-aud{ display:inline-block; }
+  body.idle .tile-ch{ opacity:0; pointer-events:none; }
+
+  /* NO SIGNAL placeholders for empty cells */
+  .placeholder{
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),
+      #050505;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ns{ display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--faint); }
+  .ns-x{ position:relative; width:26px; height:26px; opacity:.7; }
+  .ns-x::before,.ns-x::after{
+    content:""; position:absolute; background:var(--faint);
+  }
+  .ns-x::before{ left:50%; top:0; width:1px; height:100%; transform:translateX(-.5px); }
+  .ns-x::after{ top:50%; left:0; height:1px; width:100%; transform:translateY(-.5px); }
+  .ns-t{ font-size:10px; letter-spacing:.34em; text-indent:.34em; }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    position:fixed; top:0; left:0; right:0; height:var(--hud-h); z-index:20;
+    display:flex; align-items:center; gap:18px;
+    padding:0 14px;
+    font-size:11px; letter-spacing:.16em;
+    color:var(--dim);
+    background:linear-gradient(180deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.45) 60%, rgba(0,0,0,0) 100%);
+    transition:opacity .35s ease, transform .35s ease;
+    pointer-events:none;
+  }
+  body.idle .hud{ opacity:0; transform:translateY(-6px); }
+
+  .brand{ display:flex; align-items:center; gap:9px; color:var(--ink); }
+  .brand .mark{ width:9px; height:9px; background:var(--accent); box-shadow:0 0 10px var(--accent-glow); }
+  .brand b{ font-weight:600; letter-spacing:.28em; font-size:11px; }
+  .sep{ width:1px; height:13px; background:var(--line); }
+  .stat{ display:flex; align-items:center; gap:7px; font-variant-numeric:tabular-nums; }
+  .stat .n{ color:var(--ink); }
+  .live{ display:flex; align-items:center; gap:7px; color:var(--accent); }
+  .live .dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; box-shadow:0 0 0 0 var(--accent-glow);} 50%{ opacity:.45; box-shadow:0 0 0 5px transparent;} }
+  .hud .spacer{ flex:1; }
+  .hint{ color:var(--faint); }
+  .hint kbd{
+    font-family:inherit; font-size:10px; color:var(--dim);
+    border:1px solid var(--line); border-bottom-width:2px; border-radius:3px;
+    padding:1px 5px; margin:0 2px;
+  }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty{
+    position:fixed; inset:0; z-index:5;
+    display:none; align-items:center; justify-content:center;
+    background:radial-gradient(120% 100% at 50% 40%, #0b0a08 0%, #000 70%);
+  }
+  body.is-empty .empty{ display:flex; }
+  body.editor-open.is-empty .empty{ filter:brightness(.5); }
+  .frame{
+    position:relative; padding:54px 70px; text-align:center;
+  }
+  .frame::before,.frame::after,
+  .frame .c1,.frame .c2{
+    content:""; position:absolute; width:16px; height:16px; border:1px solid var(--accent-deep);
+  }
+  .frame::before{ top:0; left:0; border-right:0; border-bottom:0; }
+  .frame::after{ top:0; right:0; border-left:0; border-bottom:0; }
+  .frame .c1{ bottom:0; left:0; border-right:0; border-top:0; }
+  .frame .c2{ bottom:0; right:0; border-left:0; border-top:0; }
+  .frame h1{ font-size:13px; font-weight:600; letter-spacing:.42em; text-indent:.42em; color:var(--ink); }
+  .frame p{ margin-top:14px; font-size:11px; letter-spacing:.2em; color:var(--dim); }
+  .frame p kbd{ color:var(--accent); border:1px solid var(--accent-deep); border-radius:3px; padding:1px 6px; }
+
+  /* ---------- EDITOR PANEL ---------- */
+  .scrim{
+    position:fixed; inset:0; z-index:30; background:rgba(0,0,0,.45);
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  body.editor-open .scrim{ opacity:1; pointer-events:auto; }
+
+  .editor{
+    position:fixed; top:0; right:0; bottom:0; z-index:40;
+    width:min(440px, 92vw);
+    background:linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border-left:1px solid var(--line);
+    box-shadow:-30px 0 80px rgba(0,0,0,.6);
+    transform:translateX(100%);
+    transition:transform .24s cubic-bezier(.4,0,.1,1);
+    display:flex; flex-direction:column;
+    pointer-events:auto;
+  }
+  body.editor-open .editor{ transform:none; }
+
+  .ed-head{
+    display:flex; align-items:baseline; gap:10px;
+    padding:18px 20px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .ed-head .mark{ width:8px; height:8px; background:var(--accent); align-self:center; }
+  .ed-head h2{ font-size:12px; font-weight:600; letter-spacing:.26em; color:var(--ink); }
+  .ed-head .count{ margin-left:auto; font-size:11px; letter-spacing:.14em; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .ed-head .count b{ color:var(--accent); }
+
+  .ed-body{ flex:1; display:flex; flex-direction:column; min-height:0; padding:16px 20px; gap:16px; }
+
+  .field label{ display:block; font-size:10px; letter-spacing:.24em; color:var(--dim); margin-bottom:8px; }
+  textarea#src{
+    width:100%; height:118px; resize:none;
+    background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:0;
+    padding:11px 12px;
+    font-family:var(--mono); font-size:12px; line-height:1.7; letter-spacing:.02em;
+    outline:none; user-select:text;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea#src::placeholder{ color:var(--faint); }
+  textarea#src:focus{ border-color:var(--accent-deep); box-shadow:inset 0 0 0 1px var(--accent-deep); }
+
+  .ed-list{ flex:1; min-height:0; overflow-y:auto; border-top:1px dashed var(--line); padding-top:12px; }
+  .ed-list::-webkit-scrollbar{ width:8px; }
+  .ed-list::-webkit-scrollbar-thumb{ background:var(--line); }
+  .ed-list .none{ color:var(--faint); font-size:11px; letter-spacing:.18em; padding:8px 2px; }
+
+  .src-row{
+    display:grid; grid-template-columns:26px 64px 1fr 24px; align-items:center; gap:10px;
+    padding:6px 2px; border-bottom:1px solid rgba(255,255,255,.03);
+  }
+  .src-ch{ font-size:11px; color:var(--accent); font-variant-numeric:tabular-nums; letter-spacing:.06em; }
+  .src-thumb{ position:relative; width:64px; aspect-ratio:16/9; background:#000; overflow:hidden; border:1px solid var(--line); }
+  .src-thumb img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .src-id{ font-size:11px; color:var(--dim); letter-spacing:.06em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .src-del{
+    width:22px; height:22px; line-height:1; cursor:pointer;
+    background:transparent; color:var(--faint); border:1px solid var(--line);
+    font-family:var(--mono); font-size:13px;
+    transition:all .14s ease;
+  }
+  .src-del:hover{ color:#000; background:var(--accent); border-color:var(--accent); }
+
+  .ed-foot{ display:flex; gap:10px; padding:14px 20px; border-top:1px solid var(--line); }
+  .btn{
+    flex:1; cursor:pointer; padding:11px 14px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.2em;
+    background:transparent; color:var(--dim); border:1px solid var(--line);
+    transition:all .14s ease;
+  }
+  .btn:hover{ color:var(--ink); border-color:var(--dim); }
+  .btn.primary{ color:#1a1408; background:var(--accent); border-color:var(--accent); font-weight:600; }
+  .btn.primary:hover{ background:#f1c45f; border-color:#f1c45f; box-shadow:0 0 24px var(--accent-glow); }
+  .ed-keys{ padding:0 20px 16px; font-size:10px; letter-spacing:.16em; color:var(--faint); }
+  .ed-keys kbd{ color:var(--dim); border:1px solid var(--line); border-radius:3px; padding:0 4px; }
+
+  /* ---------- POWER-ON SWEEP ---------- */
+  .sweep{ position:fixed; inset:0; z-index:60; pointer-events:none; overflow:hidden; }
+  .sweep::after{
+    content:""; position:absolute; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--accent), transparent);
+    box-shadow:0 0 24px 6px var(--accent-glow);
+    animation:sweep .7s ease-in forwards;
+  }
+  @keyframes sweep{ 0%{ top:-2px; opacity:0; } 12%{ opacity:1; } 100%{ top:100%; opacity:0; } }
+
+  /* ---------- KEYBIND HELP ---------- */
+  .help{
+    position:fixed; left:14px; bottom:14px; z-index:50;
+    opacity:0; transform:translateY(8px); pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  body.help-open .help{ opacity:1; transform:none; pointer-events:auto; }
+  .help-card{
+    background:linear-gradient(180deg, rgba(12,11,10,.97), rgba(7,6,5,.97));
+    border:1px solid var(--line); border-left:2px solid var(--accent);
+    padding:14px 18px 12px; min-width:250px;
+    box-shadow:0 24px 60px rgba(0,0,0,.6);
+  }
+  .help-h{ display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.28em; color:var(--ink); margin-bottom:12px; }
+  .help-h .mark{ width:7px; height:7px; background:var(--accent); }
+  .help dl{ display:flex; flex-direction:column; gap:8px; }
+  .help dl > div{ display:flex; align-items:baseline; gap:14px; }
+  .help dt{ flex:0 0 66px; color:var(--accent); font-size:11px; letter-spacing:.06em; }
+  .help dd{ margin:0; color:var(--dim); font-size:11px; letter-spacing:.13em; }
+  .help-os{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); font-size:9px; letter-spacing:.1em; color:var(--faint); line-height:1.8; }
+
+  /* ---------- JAM SESSION (scan-to-add dropdown) ---------- */
+  .jam-btn{
+    pointer-events:auto; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.2em; font-weight:600;
+    color:var(--accent); background:rgba(230,180,80,.08);
+    border:1px solid var(--accent-deep); border-radius:3px;
+    padding:5px 12px; transition:all .14s ease;
+  }
+  .jam-btn:hover{ color:#1a1408; background:var(--accent); border-color:var(--accent); box-shadow:0 0 18px var(--accent-glow); }
+  body.jam-open .jam-btn{ color:#1a1408; background:var(--accent); border-color:var(--accent); }
+  .jam-btn svg{ width:13px; height:13px; display:block; }
+
+  /* the panel drops down from the SHARE button */
+  .jam{
+    position:fixed; top:calc(var(--hud-h) + 6px); right:12px; z-index:56;
+    width:300px;
+    opacity:0; transform:translateY(-8px); pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  body.jam-open .jam{ opacity:1; transform:none; pointer-events:auto; }
+  .jam-card{
+    position:relative; text-align:center;
+    background:linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border:1px solid var(--line); border-top:2px solid var(--accent);
+    padding:20px 22px 16px;
+    box-shadow:0 30px 80px rgba(0,0,0,.7);
+  }
+  .jam-card::before{                 /* caret pointing up at the button */
+    content:""; position:absolute; top:-6px; right:24px;
+    width:10px; height:10px; background:var(--panel);
+    border-left:1px solid var(--accent); border-top:1px solid var(--accent);
+    transform:rotate(45deg);
+  }
+  .jam-h{ display:flex; align-items:center; justify-content:center; gap:9px; font-size:11px; letter-spacing:.3em; text-indent:.3em; color:var(--ink); margin-bottom:16px; }
+  .jam-h .mark{ width:7px; height:7px; background:var(--accent); box-shadow:0 0 10px var(--accent-glow); }
+  .jam-qr{
+    width:204px; height:204px; margin:0 auto 14px;
+    background:#f4efe2; padding:9px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 1px var(--accent-deep);
+  }
+  .jam-qr img, .jam-qr svg{ width:100%; height:100%; display:block; }
+  .jam-qr.pending{ color:var(--accent-deep); font-size:10px; letter-spacing:.2em; background:#0a0908; box-shadow:0 0 0 1px var(--line); }
+  .jam-url{ font-size:13px; letter-spacing:.04em; color:var(--accent); margin-bottom:6px; font-variant-numeric:tabular-nums; word-break:break-all; }
+  .jam-sub{ font-size:9px; letter-spacing:.18em; color:var(--dim); }
+  .jam-foot{ margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); font-size:10px; letter-spacing:.16em; color:var(--dim); }
+  .jam-foot b{ color:var(--accent); font-variant-numeric:tabular-nums; }
+  .jam-close{ margin-top:10px; font-size:9px; letter-spacing:.14em; color:var(--faint); }
+  .jam-close kbd{ color:var(--dim); border:1px solid var(--line); border-radius:3px; padding:0 4px; }
+</style>
+</head>
+<body class="is-empty idle">
+
+  <main id="wall" class="wall" aria-label="Video wall"></main>
+
+  <section class="empty" aria-hidden="true">
+    <div class="frame">
+      <span class="c1"></span><span class="c2"></span>
+      <h1>NO SOURCES</h1>
+      <p>PRESS <kbd>E</kbd> TO ADD &middot; <kbd>J</kbd> TO START A JAM</p>
+    </div>
+  </section>
+
+  <header class="hud" id="hud">
+    <span class="brand"><span class="mark"></span><b>VIDEO&nbsp;WALL</b></span>
+    <span class="sep"></span>
+    <span class="stat"><span class="n" id="hudCount">00</span> SOURCES</span>
+    <span class="sep"></span>
+    <span class="live"><span class="dot"></span> LIVE</span>
+    <span class="spacer"></span>
+    <span class="hint"><kbd>E</kbd> EDIT &nbsp; <kbd>C</kbd> <span id="modeLabel">FILL</span> &nbsp; <kbd>?</kbd> KEYS</span>
+    <button class="jam-btn" id="jamBtn" type="button" aria-label="Show jam QR code">
+      <svg viewBox="0 0 11 11" fill="currentColor" aria-hidden="true">
+        <rect width="3" height="3"></rect><rect x="8" width="3" height="3"></rect>
+        <rect y="8" width="3" height="3"></rect><rect x="5" y="5" width="1.4" height="1.4"></rect>
+        <rect x="8" y="5" width="3" height="1.4"></rect><rect x="5" y="8" width="1.4" height="3"></rect>
+        <rect x="8" y="8" width="3" height="3"></rect>
+      </svg>
+      SHARE
+    </button>
+  </header>
+
+  <div class="scrim" id="scrim"></div>
+
+  <aside class="editor" id="editor" aria-label="Source editor">
+    <div class="ed-head">
+      <span class="mark"></span>
+      <h2>SOURCE&nbsp;LIST</h2>
+      <span class="count"><b id="edCount">00</b> / FEED</span>
+    </div>
+    <div class="ed-body">
+      <div class="field">
+        <label>ADD YOUTUBE URLS &mdash; ONE PER LINE</label>
+        <textarea id="src" spellcheck="false" autocomplete="off"
+          placeholder="https://youtu.be/dQw4w9WgXcQ&#10;https://www.youtube.com/watch?v=9bZkp7q19f0&#10;https://youtube.com/shorts/...&#10;or paste a bare 11-char ID"></textarea>
+        <div class="ed-keys" id="addHint" style="padding:8px 0 0;"></div>
+      </div>
+      <div class="ed-list" id="list"><div class="none">— EMPTY —</div></div>
+    </div>
+    <div class="ed-foot">
+      <button class="btn primary" id="apply">ADD</button>
+      <button class="btn" id="clear">CLEAR WALL</button>
+    </div>
+    <div class="ed-keys"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> ADD &nbsp;·&nbsp; <kbd>J</kbd> JAM &nbsp;·&nbsp; <kbd>Esc</kbd> CLOSE</div>
+  </aside>
+
+  <aside class="help" id="help" aria-label="Keyboard shortcuts">
+    <div class="help-card">
+      <div class="help-h"><span class="mark"></span> KEYS</div>
+      <dl>
+        <div><dt>E</dt><dd>EDIT SOURCES</dd></div>
+        <div><dt>J</dt><dd>JAM &middot; SCAN TO ADD</dd></div>
+        <div><dt>1 &ndash; 9</dt><dd>SOLO AUDIO &middot; CHANNEL</dd></div>
+        <div><dt>0 / M</dt><dd>MUTE ALL</dd></div>
+        <div><dt>CLICK CH</dt><dd>SOLO THAT TILE</dd></div>
+        <div><dt>C</dt><dd>FILL / FIT</dd></div>
+        <div><dt>?</dt><dd>TOGGLE THIS</dd></div>
+        <div><dt>ESC</dt><dd>CLOSE PANELS</dd></div>
+      </dl>
+      <div class="help-os">SUPER+Y OPEN &middot; SUPER+SHIFT+Y CLOSE &middot; SUPER+F FULLSCREEN</div>
+    </div>
+  </aside>
+
+  <section class="jam" id="jam" aria-label="Jam session">
+    <div class="jam-card">
+      <div class="jam-h"><span class="mark"></span> JAM SESSION</div>
+      <div class="jam-qr pending" id="jamQr">PREPARING…</div>
+      <div class="jam-url" id="jamUrl">&mdash;</div>
+      <div class="jam-sub">SCAN OR OPEN ON YOUR PHONE &middot; SAME WI&#8209;FI</div>
+      <div class="jam-foot"><b id="jamCount">00</b> ON THE WALL</div>
+      <div class="jam-close"><kbd>J</kbd> · <kbd>ESC</kbd> · CLICK AWAY TO CLOSE</div>
+    </div>
+  </section>
+
+  <div class="sweep" id="sweep"></div>
+
+<script>
+(function(){
+  "use strict";
+  const STORE_KEY = "videowall.sources.v1";
+  const FIT_KEY = "videowall.fit.v1";
+  const H = { "Content-Type":"application/json" };
+  const wall   = document.getElementById("wall");
+  const editor = document.getElementById("editor");
+  const scrim  = document.getElementById("scrim");
+  const srcEl  = document.getElementById("src");
+  const listEl = document.getElementById("list");
+  const hudCnt = document.getElementById("hudCount");
+  const edCnt  = document.getElementById("edCount");
+  const addHint= document.getElementById("addHint");
+  const jamEl  = document.getElementById("jam");
+  const jamBtn = document.getElementById("jamBtn");
+  const jamQr  = document.getElementById("jamQr");
+  const jamUrl = document.getElementById("jamUrl");
+  const jamCnt = document.getElementById("jamCount");
+
+  const tiles = new Map();      // videoId -> tile element (preserves loaded iframe)
+  const placeholders = [];      // reusable NO SIGNAL cells
+  let currentIds = [];          // ids in display order (for number-key solo)
+  let activeAudio = null;       // id of the tile currently playing audio
+  let editorOpen = false;
+
+  /* ---- shared lineup: the jam server when it's up, else localStorage ----
+     Launched via SUPER+Y the wall talks to a tiny local server (server.py) so
+     friends on the same Wi-Fi can add links from their phones. Opened as a
+     plain file it falls back to a private, browser-only lineup. ---- */
+  let API = false;              // true once /api/info answers
+  let info = null;              // {lan_ip, join_url, qr, ...}
+  let items = [];               // [{id,by,t}] mirror of the lineup
+  let lastRev = -1;
+
+  function idsOf(){ return items.map(it => it.id); }
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  async function apiJSON(path, opts){
+    const r = await fetch(path, Object.assign({ cache:"no-store" }, opts || {}));
+    if(!r.ok) throw new Error(path + " " + r.status);
+    return r.json();
+  }
+
+  // localStorage fallback - same shape as the server's state.
+  const local = {
+    rev:0, items:[],
+    load(){ let raw=""; try{ raw = localStorage.getItem(STORE_KEY) || ""; }catch(e){}
+            this.items = parseIds(raw).map(id => ({ id, by:"", t:0 })); },
+    save(){ try{ localStorage.setItem(STORE_KEY, this.items.map(i=>i.id).join("\n")); }catch(e){} },
+    state(){ return { rev:this.rev, items:this.items.slice() }; },
+    add(ids){ const have=new Set(this.items.map(i=>i.id)); let n=0;
+              ids.forEach(id=>{ if(!have.has(id)){ this.items.push({id,by:"",t:0}); have.add(id); n++; } });
+              if(n){ this.rev++; this.save(); } return n; },
+    remove(id){ const k=this.items.length; this.items=this.items.filter(i=>i.id!==id);
+                if(this.items.length!==k){ this.rev++; this.save(); } },
+    clear(){ if(this.items.length){ this.items=[]; this.rev++; this.save(); } }
+  };
+
+  function applyState(s){
+    if(!s || s.rev === lastRev) return;       // re-render only when it changed
+    lastRev = s.rev;
+    items = s.items || [];
+    render(idsOf());
+    if(editorOpen) renderEditorList();
+    if(jamCnt) jamCnt.textContent = String(items.length).padStart(2, "0");
+  }
+  async function refresh(){
+    if(API){ try{ applyState(await apiJSON("/api/state")); }catch(e){} }
+    else applyState(local.state());
+  }
+  async function addText(text, by){
+    const ids = parseIds(text);
+    if(!ids.length) return 0;
+    if(API){ const s = await apiJSON("/api/add", { method:"POST", headers:H, body:JSON.stringify({ text, by:by||"" }) });
+             applyState(s); return s.added || 0; }
+    const n = local.add(ids); applyState(local.state()); return n;
+  }
+  async function removeOne(id){
+    if(API){ applyState(await apiJSON("/api/remove", { method:"POST", headers:H, body:JSON.stringify({ id }) })); }
+    else { local.remove(id); applyState(local.state()); }
+  }
+  async function clearWall(){
+    if(API){ applyState(await apiJSON("/api/clear", { method:"POST", headers:H, body:"{}" })); }
+    else { local.clear(); applyState(local.state()); }
+  }
+
+  /* ---- URL / ID parsing ---- */
+  function extractId(raw){
+    const s = (raw || "").trim();
+    if(!s) return null;
+    if(/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+    try{
+      const u = new URL(s.includes("://") ? s : "https://" + s);
+      const host = u.hostname.replace(/^www\./, "");
+      if(host === "youtu.be"){
+        const id = u.pathname.slice(1, 12);
+        if(/^[A-Za-z0-9_-]{11}$/.test(id)) return id;
+      }
+      const v = u.searchParams.get("v");
+      if(v && /^[A-Za-z0-9_-]{11}$/.test(v)) return v;
+      const m = u.pathname.match(/\/(?:embed|shorts|live|v)\/([A-Za-z0-9_-]{11})/);
+      if(m) return m[1];
+    }catch(e){ /* fall through */ }
+    const m = s.match(/([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+  function parseIds(text){
+    const out = [], seen = new Set();
+    (text || "").split(/[\s,]+/).forEach(tok=>{
+      const id = extractId(tok);
+      if(id && !seen.has(id)){ seen.add(id); out.push(id); }
+    });
+    return out;
+  }
+
+  /* ---- grid geometry ---- */
+  function layout(n){
+    if(n <= 0){ wall.style.setProperty("--cols",1); wall.style.setProperty("--rows",1); return 0; }
+    const cols = Math.ceil(Math.sqrt(n));
+    const rows = Math.ceil(n / cols);
+    wall.style.setProperty("--cols", cols);
+    wall.style.setProperty("--rows", rows);
+    return cols * rows;
+  }
+
+  function makeTile(id, idx){
+    const t = document.createElement("div");
+    t.className = "tile";
+    const f = document.createElement("iframe");
+    let src = "https://www.youtube.com/embed/" + id +
+              "?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3";
+    // YouTube's embed rejects file:// origins (Error 153); when we're served
+    // over http(s) we can hand it a real origin and it plays fine.
+    if(location.protocol === "http:" || location.protocol === "https:"){
+      src += "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    }
+    f.src = src;
+    f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    f.referrerPolicy = "strict-origin-when-cross-origin";
+    f.setAttribute("frameborder","0");
+    const tag = document.createElement("div");
+    tag.className = "tile-ch";
+    tag.innerHTML = '<span class="ch-n">CH ' + String(idx + 1).padStart(2, "0") +
+                    '</span><span class="ch-aud">AUDIO</span>';
+    t.dataset.id = id;
+    t.append(f, tag);
+    return t;
+  }
+
+  /* Reconcile the wall by id, using CSS `order` so existing tiles never reload. */
+  function render(ids){
+    const cells = ids.length ? layout(ids.length) : layout(0);
+
+    ids.forEach((id, i)=>{
+      let t = tiles.get(id);
+      if(!t){ t = makeTile(id, i); tiles.set(id, t); wall.appendChild(t); }
+      t.style.order = i;
+      t.dataset.id = id;
+      const chn = t.querySelector(".ch-n");
+      if(chn) chn.textContent = "CH " + String(i + 1).padStart(2, "0");
+    });
+    for(const [id, t] of tiles){
+      if(ids.indexOf(id) === -1){ t.remove(); tiles.delete(id); }
+    }
+
+    const empties = Math.max(0, cells - ids.length);
+    while(placeholders.length < empties){
+      const p = document.createElement("div");
+      p.className = "tile placeholder";
+      p.innerHTML = '<div class="ns"><span class="ns-x"></span><span class="ns-t">NO SIGNAL</span></div>';
+      placeholders.push(p); wall.appendChild(p);
+    }
+    placeholders.forEach((p, i)=>{
+      if(i < empties){ p.style.display = ""; p.style.order = ids.length + i; }
+      else { p.style.display = "none"; }
+    });
+
+    document.body.classList.toggle("is-empty", ids.length === 0);
+    hudCnt.textContent = String(ids.length).padStart(2, "0");
+    currentIds = ids;
+    updateAudioUI();
+  }
+
+  /* ---- editor: live lineup (delete pulls a video off the wall for everyone) ---- */
+  function renderEditorList(){
+    edCnt.textContent = String(items.length).padStart(2, "0");
+    if(!items.length){ listEl.innerHTML = '<div class="none">— EMPTY —</div>'; return; }
+    listEl.innerHTML = "";
+    items.forEach((it, i)=>{
+      const row = document.createElement("div");
+      row.className = "src-row";
+      const who = it.by ? ' · ' + escapeHtml(it.by) : '';
+      row.innerHTML =
+        '<span class="src-ch">' + String(i + 1).padStart(2, "0") + '</span>' +
+        '<span class="src-thumb"><img loading="lazy" src="https://i.ytimg.com/vi/' + it.id + '/mqdefault.jpg" alt=""></span>' +
+        '<span class="src-id" title="' + it.id + '">' + it.id + who + '</span>' +
+        '<button class="src-del" data-id="' + it.id + '" aria-label="remove">&times;</button>';
+      listEl.appendChild(row);
+    });
+  }
+
+  function updateAddHint(){
+    const n = parseIds(srcEl.value).length;
+    addHint.innerHTML = n ? '<b style="color:var(--accent)">' + n + '</b> READY TO ADD' : '';
+  }
+
+  // "ADD" appends the box to the shared lineup, then clears it (Spotify-Jam style).
+  async function commitAdd(){
+    if(!parseIds(srcEl.value).length) return;
+    await addText(srcEl.value, "host");
+    srcEl.value = ""; updateAddHint(); srcEl.focus();
+  }
+
+  /* ---- editor open/close ---- */
+  function setEditor(open){
+    editorOpen = open;
+    document.body.classList.toggle("editor-open", open);
+    if(open){ renderEditorList(); updateAddHint(); poke(); setTimeout(()=>srcEl.focus(), 60); }
+  }
+
+  /* ---- jam session overlay (scan a QR to add from your phone) ---- */
+  let jamOpen = false;
+  function buildQr(url){
+    const enc = encodeURIComponent(url);
+    const img = document.createElement("img");
+    img.alt = "JOIN QR";
+    img.src = "/api/qr?data=" + enc;   // offline QR from server.py via qrencode
+    img.onerror = function(){          // fall back to a public renderer if missing
+      img.onerror = null;
+      img.src = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&data=" + enc;
+    };
+    jamQr.classList.remove("pending");
+    jamQr.innerHTML = ""; jamQr.appendChild(img);
+  }
+  async function toggleJam(force){
+    jamOpen = (typeof force === "boolean") ? force : !jamOpen;
+    document.body.classList.toggle("jam-open", jamOpen);
+    if(!jamOpen) return;
+    poke();
+    jamCnt.textContent = String(items.length).padStart(2, "0");
+    // re-read info so a Tailscale Funnel URL that came up after boot is used
+    if(API){ try{ info = await apiJSON("/api/info"); }catch(e){} }
+    if(API && info && info.join_url){
+      jamUrl.textContent = info.join_url.replace(/^https?:\/\//, "");
+      buildQr(info.join_url);
+    } else {
+      jamUrl.textContent = "SERVER NOT RUNNING";
+      jamQr.classList.add("pending");
+      jamQr.textContent = "OPEN WITH SUPER+Y";
+    }
+  }
+
+  /* ---- fill / fit mode ---- */
+  const modeLabel = document.getElementById("modeLabel");
+  function setFit(on){
+    document.body.classList.toggle("fit", on);
+    if(modeLabel) modeLabel.textContent = on ? "FIT" : "FILL";
+    try{ localStorage.setItem(FIT_KEY, on ? "1" : "0"); }catch(e){}
+  }
+
+  /* ---- audio control (YouTube IFrame postMessage API) ---- */
+  function cmd(iframe, func, args){
+    if(!iframe || !iframe.contentWindow) return;
+    try{ iframe.contentWindow.postMessage(JSON.stringify({ event:"command", func:func, args:args || [] }), "*"); }catch(e){}
+  }
+  function updateAudioUI(){ for(const [id, t] of tiles) t.classList.toggle("audio", id === activeAudio); }
+  function soloAudio(id){
+    for(const [tid, t] of tiles){
+      const f = t.querySelector("iframe"); if(!f) continue;
+      if(tid === id){ cmd(f, "unMute"); cmd(f, "setVolume", [100]); }
+      else cmd(f, "mute");
+    }
+    activeAudio = id; updateAudioUI();
+  }
+  function muteAll(){
+    for(const [, t] of tiles){ const f = t.querySelector("iframe"); if(f) cmd(f, "mute"); }
+    activeAudio = null; updateAudioUI();
+  }
+  function soloIndex(n){ if(n >= 1 && n <= currentIds.length) soloAudio(currentIds[n - 1]); }
+
+  /* ---- keybind help overlay ---- */
+  let helpOpen = false;
+  function toggleHelp(force){
+    helpOpen = (typeof force === "boolean") ? force : !helpOpen;
+    document.body.classList.toggle("help-open", helpOpen);
+    if(helpOpen) poke();
+  }
+  const helpEl = document.getElementById("help");
+  if(helpEl) helpEl.addEventListener("click", ()=> toggleHelp(false));
+
+  /* ---- HUD idle auto-hide ---- */
+  let idleTimer;
+  function poke(){
+    document.body.classList.remove("idle");
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(()=>{ if(!editorOpen && !jamOpen) document.body.classList.add("idle"); }, 2800);
+  }
+
+  /* ---- events ---- */
+  let hintTimer;
+  srcEl.addEventListener("input", ()=>{ clearTimeout(hintTimer); hintTimer = setTimeout(updateAddHint, 100); });
+  document.getElementById("apply").addEventListener("click", commitAdd);
+  document.getElementById("clear").addEventListener("click", ()=>{
+    if(items.length && confirm("Clear the whole wall for everyone?")) clearWall();
+  });
+  listEl.addEventListener("click", (e)=>{
+    const b = e.target.closest(".src-del");
+    if(b) removeOne(b.getAttribute("data-id"));
+  });
+  scrim.addEventListener("click", ()=> setEditor(false));
+  jamBtn.addEventListener("click", ()=> toggleJam());
+  // click anywhere outside the dropdown (and outside the button) closes it
+  document.addEventListener("click", (e)=>{
+    if(!jamOpen) return;
+    if(jamEl.contains(e.target) || jamBtn.contains(e.target)) return;
+    toggleJam(false);
+  });
+  wall.addEventListener("click", (e)=>{
+    const tag = e.target.closest(".tile-ch");
+    if(tag){ const t = tag.closest(".tile"); if(t && t.dataset.id) soloAudio(t.dataset.id); }
+  });
+
+  function isTyping(e){ const t = e.target; return t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT"); }
+  window.addEventListener("keydown", (e)=>{
+    if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); commitAdd(); return; }
+    if(e.key === "?" || (e.shiftKey && e.key === "/")){ e.preventDefault(); toggleHelp(); return; }
+    if(e.key === "Escape"){
+      if(jamOpen) toggleJam(false);
+      else if(helpOpen) toggleHelp(false);
+      else if(editorOpen) setEditor(false);
+      return;
+    }
+    if(isTyping(e)) return;
+    if(e.key === "e" || e.key === "E"){ e.preventDefault(); setEditor(!editorOpen); return; }
+    if(e.key === "j" || e.key === "J"){ e.preventDefault(); toggleJam(); return; }
+    if(e.key === "c" || e.key === "C"){ e.preventDefault(); setFit(!document.body.classList.contains("fit")); return; }
+    if(e.key === "m" || e.key === "M" || e.key === "0"){ e.preventDefault(); muteAll(); return; }
+    if(e.key >= "1" && e.key <= "9"){ e.preventDefault(); soloIndex(Number(e.key)); return; }
+  });
+
+  // YouTube embeds are cross-origin iframes: once a tile grabs keyboard focus
+  // (autoplay, or a click landing on the player) keydown events go to *it*, not
+  // this window, so shortcuts like J silently stop firing. Whenever the window
+  // loses focus to a tile iframe, hand focus straight back to the page.
+  window.addEventListener("blur", ()=>{
+    setTimeout(()=>{
+      const a = document.activeElement;
+      if(a && a.tagName === "IFRAME") a.blur();
+    }, 0);
+  });
+
+  window.addEventListener("mousemove", poke);
+  window.addEventListener("mousedown", poke);
+
+  /* one-time power-on sweep */
+  setTimeout(()=>{ const s = document.getElementById("sweep"); if(s) s.remove(); }, 900);
+
+  /* ---- boot ---- */
+  let pollTimer = null;
+  async function boot(){
+    let savedFit = "0";
+    try{ savedFit = localStorage.getItem(FIT_KEY) || "0"; }catch(e){}
+    setFit(savedFit === "1");
+
+    // Is the jam server up? (it answers /api/info). If not, go local-only.
+    try{ info = await apiJSON("/api/info"); API = true; }
+    catch(e){ API = false; local.load(); }
+
+    await refresh();
+
+    // Optional preset via URL hash (#ID,ID or #url+url) - seeds an empty wall.
+    const hashRaw = location.hash ? decodeURIComponent(location.hash.slice(1)) : "";
+    const hashIds = parseIds(hashRaw.replace(/[+,]/g, " "));
+    if(hashIds.length && !items.length){ await addText(hashIds.join(" "), "host"); }
+
+    if(API){ pollTimer = setInterval(()=>{ if(!document.hidden) refresh(); }, 2000); }
+    if(!items.length) setEditor(true);
+    poke();
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

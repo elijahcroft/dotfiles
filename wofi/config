@@ -1,0 +1,17 @@
+show=drun
+prompt=Search
+width=600
+height=420
+lines=8
+columns=1
+location=center
+orientation=vertical
+halign=fill
+content_halign=fill
+allow_images=true
+image_size=28
+insensitive=true
+no_actions=true
+hide_scroll=true
+gtk_dark=true
+key_expand=Tab

@@ -1,0 +1,61 @@
+# Minimal monochrome Ghostty theme, matched to Hyprland/Waybar/Wofi.
+
+font-family = NotoSansM Nerd Font
+font-size = 12
+font-style = Regular
+font-style-bold = Bold
+font-style-italic = Italic
+font-style-bold-italic = Bold Italic
+
+background = #121214
+foreground = #ededed
+background-opacity = 0.22
+background-blur = true
+minimum-contrast = 1.15
+faint-opacity = 0.58
+
+cursor-color = #ffffff
+cursor-text = #111111
+cursor-style = block
+cursor-style-blink = false
+
+selection-foreground = #111111
+selection-background = #ffffff
+
+window-padding-x = 10
+window-padding-y = 8
+window-padding-balance = true
+window-padding-color = background
+window-decoration = false
+gtk-titlebar = false
+window-theme = dark
+window-show-tab-bar = auto
+window-inherit-working-directory = true
+window-inherit-font-size = true
+
+copy-on-select = true
+mouse-hide-while-typing = true
+scrollback-limit = 10000000
+confirm-close-surface = false
+
+# Daily-driver niceties (additive — keeps the monochrome look).
+# Clickable URLs (link-url) and bold=bright are already on by default.
+font-thicken = true
+unfocused-split-opacity = 0.85
+
+palette = 0=#121214
+palette = 1=#c45c5c
+palette = 2=#8fbf8f
+palette = 3=#d6b25e
+palette = 4=#7aa2d6
+palette = 5=#b48ead
+palette = 6=#88c0c0
+palette = 7=#cfcfcf
+palette = 8=#6e6e73
+palette = 9=#e06c6c
+palette = 10=#a6d6a6
+palette = 11=#f0c35c
+palette = 12=#9dbde8
+palette = 13=#d3a6d8
+palette = 14=#a8dddd
+palette = 15=#ffffff

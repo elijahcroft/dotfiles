@@ -1,0 +1,40 @@
+/* ============================================================
+   wlogout — minimal monochrome
+   frosted dark glass · white selected state
+   (matches waybar / wofi / hyprland rice)
+   ============================================================ */
+
+* {
+    font-family: 'SF Pro Text', 'Inter', 'Segoe UI', sans-serif;
+    font-size: 16px;
+    background-image: none;
+    transition: all 0.3s ease;
+}
+
+window {
+    background: rgba(12, 12, 14, 0.55);
+}
+
+button {
+    color: #cfcfcf;
+    background: linear-gradient(160deg, rgba(28, 28, 30, 0.92), rgba(18, 18, 20, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.30),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    margin: 8px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 28%;
+}
+
+button:focus,
+button:active,
+button:hover {
+    color: #111111;
+    background-color: #ffffff;
+    background: linear-gradient(160deg, #ffffff, #d6d6d6);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.30);
+}

@@ -1,0 +1,161 @@
+{
+  "layer": "top",
+  "position": "top",
+  "margin-bottom": -10,
+  "spacing" : 0,
+  "modules-left": [
+  "hyprland/workspaces",
+  "custom/claude",
+  "custom/claude-usage",
+  "custom/music"
+  ],
+
+  "modules-center": ["clock"],
+
+  "modules-right": [
+    "custom/sysmon",
+    "network",
+    "pulseaudio",
+    "backlight",
+    "battery",
+    "custom/binds",
+  ],
+
+  "hyprland/workspaces": {
+    "format": "{name}: {icon}",
+    "format-icons": {
+      "active": "",
+      "default": ""
+    }
+  },
+
+  "tray": {
+    "icon-size": 16,
+    "spacing": 8
+  },
+
+  "bluetooth": {
+    "format": "󰂲",
+    "format-on": "{icon}",
+    "format-off": "{icon}", 
+    "format-connected":"{icon}",
+    "format-icons":{
+        "on":"󰂯",
+        "off": "󰂲",
+        "connected": "󰂱",
+        },
+    "on-click": "blueman-manager",
+    "tooltip-format-connected":"{device_enumerate}"
+  },
+
+  "custom/music": {
+    "format": "  {}",
+    "escape": true,
+    "interval": 5,
+    "tooltip": true,
+    "exec": "playerctl metadata --format='{{ title }}'",
+    "tooltip-format": "{}",
+    "on-click": "playerctl play-pause",
+    "max-length": 20
+  },
+
+  "clock": {
+    "timezone": "America/Los_Angeles",
+    "tooltip": false,
+    "format": "{:%I:%M %p}",
+    "interval": 1
+  },
+
+  "custom/pomodoro": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": 1,
+    "exec": "$HOME/.config/waybar/scripts/pomodoro.sh status",
+    "on-click": "$HOME/.config/waybar/scripts/pomodoro.sh start",
+    "on-click-right": "$HOME/.config/waybar/scripts/pomodoro.sh stop"
+  },
+
+  "network": {
+    "format-wifi": "󰤢",
+    "format-ethernet": "󰈀 ",
+    "format-disconnected": "󰤠 ",
+    "interval": 5,
+    "tooltip-format": "{essid} ({signalStrength}%)",
+    "on-click": "nm-connection-editor"
+
+ },
+
+  "custom/sysmon": {
+    "interval": 2,
+    "return-type": "json",
+    "exec": "$HOME/.config/waybar/scripts/sysmon.sh",
+    "on-click": "ghostty -e htop"
+  },
+
+  "custom/binds": {
+    "format": "󰌌",
+    "tooltip": true,
+    "tooltip-format": "Keybinds — click to view",
+    "on-click": "$HOME/.config/hypr/scripts/show-binds.sh"
+  },
+
+  "custom/claude": {
+    "format": "    ",
+    "tooltip": false
+  },
+
+  "custom/claude-usage": {
+    "return-type": "json",
+    "interval": 300,
+    "exec": "$HOME/.config/waybar/scripts/claude-usage.sh",
+    "tooltip": true
+  },
+
+  "custom/uptime": {
+    "format": "{}",
+    "format-icon": [""], 
+    "tooltip": false,
+    "interval": 1600,
+    "exec": "$HOME/.config/waybar/scripts/uptime.sh"
+  },
+  
+  "backlight": {
+        "format": "{icon}  {percent}%",
+        "format-icons": ["","󰃜", "󰃛", "󰃞","󰃝","󰃟","󰃠"],
+        "tooltip": false
+  },
+  
+  "pulseaudio": {
+    "format": "{icon}  {volume}%",
+    "format-muted": "",
+    "format-icons": {
+      "default": ["", "", " "]
+    },
+    "on-click": "pavucontrol"
+  },
+
+  "battery": {
+        "interval":2,
+        "states": {
+            // "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon}  {capacity}%",
+        "format-full": "{icon}  {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-alt": "{icon} {time}",
+        // "format-good": "", // An empty format will hide the module
+        // "format-full": "",
+        "format-icons": ["", "", "", "", ""]
+  },
+  
+  "custom/lock": {
+  "tooltip": false,
+  "on-click": "sh -c '(sleep 0s; hyprlock)' & disown",
+  "format" : ""
+  },
+
+}
+
